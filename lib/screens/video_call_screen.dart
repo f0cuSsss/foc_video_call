@@ -97,22 +97,27 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          Center(
-            child: _remoteVideo(),
-          ),
-          Align(
-            alignment: Alignment.topLeft,
-            child: SizedBox(
-              width: 100,
-              height: 150,
-              child: Center(
-                child: _localUserJoined
-                    ? RtcLocalView.SurfaceView()
-                    : const CircularProgressIndicator(
-                        color: Colors.white, strokeWidth: 1),
-              ),
-            ),
-          ),
+          Center(child: _remoteVideo()),
+          !isCollapsed
+              ? const SizedBox()
+              : Align(
+                  alignment: Alignment.topLeft,
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      borderRadius: BorderRadius.only(
+                        bottomRight: Radius.circular(10),
+                      ),
+                    ),
+                    width: 100,
+                    height: 150,
+                    child: Center(
+                      child: _localUserJoined
+                          ? RtcLocalView.SurfaceView()
+                          : const CircularProgressIndicator(
+                              color: Colors.white, strokeWidth: 1),
+                    ),
+                  ),
+                ),
           _toolbar()
         ],
       ),
@@ -221,7 +226,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
     setState(() {
       isCameraActive = !isCameraActive;
     });
-    _engine.setCameraTorchOn(isCameraActive);
+    isCameraActive ? _engine.disableVideo() : _engine.enableAudio();
   }
 
   void _onSwitchCamera() {
