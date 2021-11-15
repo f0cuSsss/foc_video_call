@@ -6,6 +6,7 @@ import 'package:agora_rtc_engine/rtc_local_view.dart' as RtcLocalView;
 import 'package:agora_rtc_engine/rtc_remote_view.dart' as RtcRemoteView;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_foc_live_call/screens/initial_settings_screen.dart';
 import 'package:flutter_foc_live_call/utils/colors.dart';
 import 'package:flutter_pip/platform_channel/channel.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -13,7 +14,14 @@ import 'package:permission_handler/permission_handler.dart';
 const appId = "4072b1813d034add9655b86ffb8c6634";
 
 class VideoCallScreen extends StatefulWidget {
-  const VideoCallScreen({Key? key}) : super(key: key);
+  const VideoCallScreen({
+    Key? key,
+    required this.token,
+    required this.channel,
+  }) : super(key: key);
+
+  final String token;
+  final String channel;
 
   @override
   State<VideoCallScreen> createState() => _VideoCallScreenState();
@@ -25,9 +33,6 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
   bool isCameraActive = false;
   bool isCollapsed = false;
   bool _localUserJoined = false;
-
-  String token = "";
-  TextEditingController tokenFieldController = TextEditingController();
 
   late final Timer? _timer;
 
@@ -91,104 +96,36 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
         },
       ),
     );
-    await _engine.joinChannel(token, "vladlena", null, 0);
+    await _engine.joinChannel(widget.token, widget.channel, null, 0);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: token.isEmpty
-          ? _buildTokenField()
-          : Stack(
-              children: [
-                Center(child: _remoteVideo()),
-                isCollapsed
-                    ? const SizedBox()
-                    : Align(
-                        alignment: Alignment.topLeft,
-                        child: Container(
-                          decoration: const BoxDecoration(
-                            borderRadius: BorderRadius.only(
-                              bottomRight: Radius.circular(10),
-                            ),
-                          ),
-                          width: 100,
-                          height: 150,
-                          child: Center(
-                            child: _localUserJoined
-                                ? RtcLocalView.SurfaceView()
-                                : const CircularProgressIndicator(
-                                    color: Colors.white, strokeWidth: 1),
-                          ),
-                        ),
-                      ),
-                _toolbar()
-              ],
-            ),
-    );
-  }
-
-  Widget _buildTokenField() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 15),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+      body: Stack(
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: tokenFieldController,
-                  style: const TextStyle(color: Colors.white),
-                  readOnly: true,
-                ),
-              ),
-              const SizedBox(width: 5),
-              tokenFieldController.text.isNotEmpty
-                  ? IconButton(
-                      onPressed: () {
-                        setState(() {
-                          tokenFieldController.text = "";
-                        });
-                      },
-                      icon: const Icon(
-                        Icons.cancel_rounded,
-                        color: Colors.white,
+          Center(child: _remoteVideo()),
+          isCollapsed
+              ? const SizedBox()
+              : Align(
+                  alignment: Alignment.topLeft,
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      borderRadius: BorderRadius.only(
+                        bottomRight: Radius.circular(10),
                       ),
-                    )
-                  : const SizedBox(),
-              IconButton(
-                onPressed: () {
-                  Clipboard.getData(Clipboard.kTextPlain).then((value) {
-                    if (value == null || value.text == null) {
-                      return;
-                    } else {
-                      setState(() {
-                        tokenFieldController.text = value.text!;
-                      });
-                    }
-                  });
-                },
-                icon: const Icon(
-                  Icons.paste,
-                  color: Colors.white,
+                    ),
+                    width: 100,
+                    height: 150,
+                    child: Center(
+                      child: _localUserJoined
+                          ? RtcLocalView.SurfaceView()
+                          : const CircularProgressIndicator(
+                              color: Colors.white, strokeWidth: 1),
+                    ),
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 25),
-          TextButton(
-            onPressed: () {
-              if (tokenFieldController.text.isEmpty) {
-                return;
-              }
-
-              setState(() {
-                token = tokenFieldController.text;
-              });
-            },
-            child: const Text('Подключиться'),
-          )
+          _toolbar()
         ],
       ),
     );
@@ -217,10 +154,13 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                 const SizedBox(height: 25),
                 TextButton(
                   onPressed: () {
-                    setState(() {
-                      token = "";
-                      tokenFieldController.text = "";
-                    });
+                    _timer?.cancel();
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const InitialSettingsScreen(),
+                      ),
+                    );
                   },
                   child: const Text('Обнулить токен'),
                 ),

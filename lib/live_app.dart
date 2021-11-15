@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_foc_live_call/screens/initial_settings_screen.dart';
 import 'package:flutter_foc_live_call/screens/video_call_screen.dart';
 import 'package:flutter_foc_live_call/utils/colors.dart';
 
@@ -13,7 +14,7 @@ class LiveApp extends StatelessWidget {
       ),
       debugShowCheckedModeBanner: false,
       title: 'Live Video Call',
-      home: const VideoCallScreen(),
+      home: const InitialSettingsScreen(),
     );
   }
 }
