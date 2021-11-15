@@ -5,13 +5,12 @@ import 'package:agora_rtc_engine/rtc_engine.dart';
 import 'package:agora_rtc_engine/rtc_local_view.dart' as RtcLocalView;
 import 'package:agora_rtc_engine/rtc_remote_view.dart' as RtcRemoteView;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_foc_live_call/utils/colors.dart';
 import 'package:flutter_pip/platform_channel/channel.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 const appId = "4072b1813d034add9655b86ffb8c6634";
-const token =
-    "0064072b1813d034add9655b86ffb8c6634IAD0+YQGgBD1O0nVzlfocJPUq3M4fshP8q/c+XVLzLBHywo6NhIAAAAAEAACwxdS2JePYQEAAQDYl49h";
 
 class VideoCallScreen extends StatefulWidget {
   const VideoCallScreen({Key? key}) : super(key: key);
@@ -26,6 +25,9 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
   bool isCameraActive = false;
   bool isCollapsed = false;
   bool _localUserJoined = false;
+
+  String token = "";
+  TextEditingController tokenFieldController = TextEditingController();
 
   late final Timer? _timer;
 
@@ -95,30 +97,98 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: [
-          Center(child: _remoteVideo()),
-          !isCollapsed
-              ? const SizedBox()
-              : Align(
-                  alignment: Alignment.topLeft,
-                  child: Container(
-                    decoration: const BoxDecoration(
-                      borderRadius: BorderRadius.only(
-                        bottomRight: Radius.circular(10),
+      body: token.isEmpty
+          ? _buildTokenField()
+          : Stack(
+              children: [
+                Center(child: _remoteVideo()),
+                isCollapsed
+                    ? const SizedBox()
+                    : Align(
+                        alignment: Alignment.topLeft,
+                        child: Container(
+                          decoration: const BoxDecoration(
+                            borderRadius: BorderRadius.only(
+                              bottomRight: Radius.circular(10),
+                            ),
+                          ),
+                          width: 100,
+                          height: 150,
+                          child: Center(
+                            child: _localUserJoined
+                                ? RtcLocalView.SurfaceView()
+                                : const CircularProgressIndicator(
+                                    color: Colors.white, strokeWidth: 1),
+                          ),
+                        ),
                       ),
-                    ),
-                    width: 100,
-                    height: 150,
-                    child: Center(
-                      child: _localUserJoined
-                          ? RtcLocalView.SurfaceView()
-                          : const CircularProgressIndicator(
-                              color: Colors.white, strokeWidth: 1),
-                    ),
-                  ),
+                _toolbar()
+              ],
+            ),
+    );
+  }
+
+  Widget _buildTokenField() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 15),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: tokenFieldController,
+                  style: const TextStyle(color: Colors.white),
+                  readOnly: true,
                 ),
-          _toolbar()
+              ),
+              const SizedBox(width: 5),
+              tokenFieldController.text.isNotEmpty
+                  ? IconButton(
+                      onPressed: () {
+                        setState(() {
+                          tokenFieldController.text = "";
+                        });
+                      },
+                      icon: const Icon(
+                        Icons.cancel_rounded,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const SizedBox(),
+              IconButton(
+                onPressed: () {
+                  Clipboard.getData(Clipboard.kTextPlain).then((value) {
+                    if (value == null || value.text == null) {
+                      return;
+                    } else {
+                      setState(() {
+                        tokenFieldController.text = value.text!;
+                      });
+                    }
+                  });
+                },
+                icon: const Icon(
+                  Icons.paste,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 25),
+          TextButton(
+            onPressed: () {
+              if (tokenFieldController.text.isEmpty) {
+                return;
+              }
+
+              setState(() {
+                token = tokenFieldController.text;
+              });
+            },
+            child: const Text('Подключиться'),
+          )
         ],
       ),
     );
@@ -128,14 +198,34 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
     if (_remoteUid != null) {
       return RtcRemoteView.SurfaceView(uid: _remoteUid!);
     } else {
-      return const Text(
-        'Твой человечек подключается...\nПодожди его 💗:)',
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          color: Colors.white,
-          letterSpacing: 0.5,
-        ),
-      );
+      return isCollapsed
+          ? const CircularProgressIndicator(
+              color: Colors.white,
+              strokeWidth: 1.5,
+            )
+          : Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text(
+                  'Твой человечек подключается...\nПодожди его 💗:)',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: 25),
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      token = "";
+                      tokenFieldController.text = "";
+                    });
+                  },
+                  child: const Text('Обнулить токен'),
+                ),
+              ],
+            );
     }
   }
 
@@ -143,8 +233,9 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
     return Container(
       alignment: Alignment.bottomCenter,
       padding: const EdgeInsets.symmetric(vertical: 48),
-      child: !isCollapsed
-          ? Row(
+      child: isCollapsed
+          ? const SizedBox()
+          : Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 RawMaterialButton(
@@ -200,8 +291,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                   padding: const EdgeInsets.all(12.0),
                 ),
               ],
-            )
-          : const SizedBox(),
+            ),
     );
   }
 
