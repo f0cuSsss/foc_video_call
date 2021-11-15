@@ -52,7 +52,6 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
         setState(() {
           isCollapsed = false;
         });
-
         // if (_timer != null) {
         //   _timer!.cancel();
         //   setState(() {
@@ -112,7 +111,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                   child: Container(
                     decoration: const BoxDecoration(
                       borderRadius: BorderRadius.only(
-                        bottomRight: Radius.circular(10),
+                        bottomRight: Radius.circular(30),
                       ),
                     ),
                     width: 100,
@@ -175,63 +174,103 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
       padding: const EdgeInsets.symmetric(vertical: 48),
       child: isCollapsed
           ? const SizedBox()
-          : Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                RawMaterialButton(
-                  onPressed: _onToggleVideo,
-                  child: Icon(
-                    isCameraActive
-                        ? Icons.videocam_off_outlined
-                        : Icons.videocam,
-                    color: Colors.white,
-                    size: 20.0,
+          : SizedBox(
+              width: MediaQuery.of(context).size.width,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  RawMaterialButton(
+                    constraints:
+                        const BoxConstraints(minWidth: 20.0, minHeight: 36.0),
+                    onPressed: _onToggleVideo,
+                    child: Icon(
+                      isCameraActive
+                          ? Icons.videocam_off_outlined
+                          : Icons.videocam,
+                      color: Colors.white,
+                      size: 20.0,
+                    ),
+                    shape: const CircleBorder(),
+                    elevation: 2.0,
+                    fillColor: isCameraActive
+                        ? const Color(0xFF8A0707)
+                        : kBackgroundColor,
+                    padding: const EdgeInsets.all(12.0),
                   ),
-                  shape: const CircleBorder(),
-                  elevation: 2.0,
-                  fillColor: isCameraActive
-                      ? const Color(0xFF8A0707)
-                      : kBackgroundColor,
-                  padding: const EdgeInsets.all(12.0),
-                ),
-                RawMaterialButton(
-                  onPressed: _onToggleMute,
-                  child: Icon(
-                    muted ? Icons.mic_off : Icons.mic,
-                    color: Colors.white,
-                    size: 20.0,
+                  RawMaterialButton(
+                    constraints:
+                        const BoxConstraints(minWidth: 20.0, minHeight: 36.0),
+                    onPressed: _onToggleMute,
+                    child: Icon(
+                      muted ? Icons.mic_off : Icons.mic,
+                      color: Colors.white,
+                      size: 20.0,
+                    ),
+                    shape: const CircleBorder(),
+                    elevation: 2.0,
+                    fillColor:
+                        muted ? const Color(0xFF8A0707) : kBackgroundColor,
+                    padding: const EdgeInsets.all(12.0),
                   ),
-                  shape: const CircleBorder(),
-                  elevation: 2.0,
-                  fillColor: muted ? const Color(0xFF8A0707) : kBackgroundColor,
-                  padding: const EdgeInsets.all(12.0),
-                ),
-                RawMaterialButton(
-                  onPressed: _onSwitchCamera,
-                  child: const Icon(
-                    Icons.cameraswitch_outlined,
-                    color: Colors.white,
-                    size: 20.0,
+                  RawMaterialButton(
+                    constraints:
+                        const BoxConstraints(minWidth: 20.0, minHeight: 36.0),
+                    onPressed: _onCallEnd,
+                    child: const Icon(
+                      Icons.call_end,
+                      color: Colors.white,
+                      size: 20.0,
+                    ),
+                    shape: const CircleBorder(),
+                    elevation: 2.0,
+                    fillColor: const Color(0xFF8A0707),
+                    padding: const EdgeInsets.all(12.0),
                   ),
-                  shape: const CircleBorder(),
-                  elevation: 2.0,
-                  fillColor: kBackgroundColor,
-                  padding: const EdgeInsets.all(12.0),
-                ),
-                RawMaterialButton(
-                  onPressed: _collapseApp,
-                  child: const Icon(
-                    Icons.copy_all_sharp,
-                    color: Colors.white,
-                    size: 20.0,
+                  RawMaterialButton(
+                    constraints:
+                        const BoxConstraints(minWidth: 20.0, minHeight: 36.0),
+                    onPressed: _onSwitchCamera,
+                    child: const Icon(
+                      Icons.cameraswitch_outlined,
+                      color: Colors.white,
+                      size: 20.0,
+                    ),
+                    shape: const CircleBorder(),
+                    elevation: 2.0,
+                    fillColor: kBackgroundColor,
+                    padding: const EdgeInsets.all(12.0),
                   ),
-                  shape: const CircleBorder(),
-                  elevation: 2.0,
-                  fillColor: kBackgroundColor,
-                  padding: const EdgeInsets.all(12.0),
-                ),
-              ],
+                  RawMaterialButton(
+                    constraints:
+                        const BoxConstraints(minWidth: 20.0, minHeight: 36.0),
+                    onPressed: _collapseApp,
+                    child: const Icon(
+                      Icons.copy_all_sharp,
+                      color: Colors.white,
+                      size: 20.0,
+                    ),
+                    shape: const CircleBorder(),
+                    elevation: 2.0,
+                    fillColor: kBackgroundColor,
+                    padding: const EdgeInsets.all(12.0),
+                  ),
+                ],
+              ),
             ),
+    );
+  }
+
+  void _onCallEnd() {
+    setState(() {
+      _remoteUid = null;
+    });
+
+    _timer?.cancel();
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const InitialSettingsScreen(),
+      ),
     );
   }
 
